@@ -4,11 +4,27 @@ import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
-const NAV_ITEMS = [
-  { href:"/dashboard",          icon:"bx-film",          label:"Library"  },
-  { href:"/dashboard/keys",     icon:"bx-key",           label:"Keys"     },
-  { href:"/dashboard/settings", icon:"bx-cog",           label:"Settings" },
+const NAV_SECTIONS = [
+  {
+    label: "Library",
+    items: [
+      { href:"/dashboard",      icon:"bx-film",    label:"Reels"    },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { href:"/dashboard/keys",     icon:"bx-key",  label:"Keys"     },
+      { href:"/dashboard/settings", icon:"bx-cog",  label:"Settings" },
+    ],
+  },
 ];
+
+const PAGE_LABELS: Record<string, string> = {
+  "/dashboard":          "Reels",
+  "/dashboard/keys":     "Keys",
+  "/dashboard/settings": "Settings",
+};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen]   = useState(false);
@@ -24,10 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   function toggle() {
-    setOpen(prev => {
-      localStorage.setItem("nav_open", String(!prev));
-      return !prev;
-    });
+    setOpen(prev => { localStorage.setItem("nav_open", String(!prev)); return !prev; });
   }
 
   async function signOut() {
@@ -43,50 +56,65 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <nav style={{
         width:W, minWidth:W, transition:"width 0.2s ease",
-        background:"#111", borderRight:"1px solid var(--border)",
+        background:"#0d0d0b",
+        borderRight:"1px solid var(--border)",
         display:"flex", flexDirection:"column",
         position:"fixed", top:0, left:0, bottom:0, zIndex:100,
         overflow:"hidden",
       }}>
-        {/* Logo / toggle */}
-        <div style={{ display:"flex", alignItems:"center", height:56,
+        <div style={{
+          display:"flex", alignItems:"center", height:56,
           padding:"0 16px", borderBottom:"1px solid var(--border)",
-          gap:10, cursor:"pointer" }} onClick={toggle}>
+          gap:10, cursor:"pointer",
+        }} onClick={toggle}>
           <i className="bx bx-microphone" style={{ fontSize:20, color:"var(--accent)", flexShrink:0 }} />
           {open && (
             <>
-              <span style={{ fontSize:14, fontWeight:700, whiteSpace:"nowrap" }}>ReelScribe</span>
+              <span style={{ fontSize:14, fontWeight:700, whiteSpace:"nowrap", fontFamily:"Cormorant Garamond, serif" }}>ReelScribe</span>
               <i className="bx bx-chevron-left" style={{ marginLeft:"auto", fontSize:16, color:"var(--muted)", flexShrink:0 }} />
             </>
           )}
         </div>
 
-        {/* Nav links */}
-        <div style={{ flex:1, padding:"8px 0" }}>
-          {NAV_ITEMS.map(({ href, icon, label }) => {
-            const active = pathname === href;
-            return (
-              <Link key={href} href={href} style={{
-                display:"flex", alignItems:"center", gap:12,
-                padding:"10px 16px", cursor:"pointer", textDecoration:"none",
-                background: active ? "rgba(126,203,161,0.08)" : "transparent",
-                borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
-                color: active ? "var(--accent)" : "var(--text)",
-                transition:"background 0.15s",
-              }}>
-                <i className={`bx ${icon}`} style={{ fontSize:18, flexShrink:0 }} />
-                {open && <span style={{ fontSize:13, whiteSpace:"nowrap" }}>{label}</span>}
-              </Link>
-            );
-          })}
+        <div style={{ flex:1, padding:"12px 0", overflowY:"auto" }}>
+          {NAV_SECTIONS.map(section => (
+            <div key={section.label} style={{ marginBottom:8 }}>
+              {open && (
+                <p style={{
+                  fontSize:9, fontWeight:600, letterSpacing:"0.18em",
+                  textTransform:"uppercase", color:"var(--muted)",
+                  padding:"8px 18px 4px", fontFamily:"DM Mono, monospace",
+                }}>
+                  {section.label}
+                </p>
+              )}
+              {section.items.map(({ href, icon, label }) => {
+                const active = pathname === href;
+                return (
+                  <Link key={href} href={href} style={{
+                    display:"flex", alignItems:"center", gap:12,
+                    padding:"9px 16px", textDecoration:"none",
+                    background: active ? "rgba(126,203,161,0.08)" : "transparent",
+                    borderLeft: active ? "2px solid var(--accent)" : "2px solid transparent",
+                    color: active ? "var(--accent)" : "var(--text)",
+                    transition:"background 0.15s",
+                  }}>
+                    <i className={`bx ${icon}`} style={{ fontSize:17, flexShrink:0 }} />
+                    {open && <span style={{ fontSize:13, whiteSpace:"nowrap" }}>{label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </div>
 
-        {/* Footer */}
         <div style={{ borderTop:"1px solid var(--border)", padding:"12px" }}>
           {open && (
-            <p style={{ fontSize:11, color:"var(--muted)", marginBottom:8,
+            <p style={{
+              fontSize:11, color:"var(--muted)", marginBottom:8,
               whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis",
-              display:"flex", alignItems:"center", gap:6 }}>
+              display:"flex", alignItems:"center", gap:6,
+            }}>
               <i className="bx bx-user-circle" style={{ fontSize:14, flexShrink:0 }} />
               {email}
             </p>
@@ -94,8 +122,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button onClick={signOut} style={{
             width:"100%", background:"transparent", border:"1px solid var(--border)",
             color:"var(--muted)", borderRadius:6, padding:"7px 0",
-            fontSize:12, cursor:"pointer", display:"flex",
-            alignItems:"center", justifyContent:"center", gap:6,
+            fontSize:12, cursor:"pointer",
+            display:"flex", alignItems:"center", justifyContent:"center", gap:6,
           }}>
             <i className="bx bx-log-out" style={{ fontSize:15 }} />
             {open && <span>Sign out</span>}
@@ -103,9 +131,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </nav>
 
-      <div style={{ marginLeft:W, flex:1, transition:"margin-left 0.2s ease", minWidth:0 }}>
-        {children}
+      <div style={{ marginLeft:W, flex:1, transition:"margin-left 0.2s ease", minWidth:0, display:"flex", flexDirection:"column" }}>
+
+        <div style={{
+          height:48, display:"flex", alignItems:"center", justifyContent:"space-between",
+          padding:"0 24px",
+          background:"rgba(13,13,11,0.8)",
+          backdropFilter:"blur(12px) saturate(160%)",
+          borderBottom:"1px solid var(--border)",
+          position:"sticky", top:0, zIndex:50,
+        }}>
+          <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, fontFamily:"DM Mono, monospace" }}>
+            <span style={{ color:"var(--muted)" }}>reelscribe</span>
+            <i className="bx bx-chevron-right" style={{ fontSize:14, color:"var(--border)" }} />
+            <span style={{ color:"var(--accent)" }}>{PAGE_LABELS[pathname] ?? "—"}</span>
+          </div>
+
+          <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+            <div style={{
+              width:28, height:28, borderRadius:"50%",
+              background:"var(--surface)", border:"1px solid var(--border)",
+              display:"flex", alignItems:"center", justifyContent:"center",
+            }}>
+              <i className="bx bx-user" style={{ fontSize:14, color:"var(--muted)" }} />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ flex:1 }}>
+          {children}
+        </div>
       </div>
+
+      <style>{`
+        @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=DM+Mono:wght@300;400&display=swap");
+      `}</style>
     </div>
   );
 }

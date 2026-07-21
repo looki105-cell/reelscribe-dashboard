@@ -1,13 +1,17 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function LandingPage() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const ringRef   = useRef<HTMLDivElement>(null);
   const demoRef   = useRef<HTMLParagraphElement>(null);
   const wcRef     = useRef<HTMLSpanElement>(null);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll);
+
     let mx = 0, my = 0, rx = 0, ry = 0;
     const onMove = (e: MouseEvent) => {
       mx = e.clientX; my = e.clientY;
@@ -22,7 +26,7 @@ export default function LandingPage() {
     };
     animRing();
 
-    const lines = "So the key thing with sourdough is hydration. You want to be at around seventy-five percent — any higher and you're fighting the dough the whole way. I start my levain the night before, let it peak by morning. The bulk ferment is where most people go wrong — they cut it short. You want to see a thirty percent rise, feel that tension in the dough...";
+    const lines = "So the key thing with sourdough is hydration. You want to be at around seventy-five percent — any higher and you\'re fighting the dough the whole way. I start my levain the night before, let it peak by morning. The bulk ferment is where most people go wrong — they cut it short. You want to see a thirty percent rise, feel that tension in the dough...";
     let i = 0;
     let timer: ReturnType<typeof setTimeout>;
     const typeNext = () => {
@@ -50,6 +54,7 @@ export default function LandingPage() {
     document.querySelectorAll(".step, .quote-text, .quote-attr").forEach(el => obs.observe(el));
 
     return () => {
+      window.removeEventListener("scroll", onScroll);
       document.removeEventListener("mousemove", onMove);
       cancelAnimationFrame(raf);
       clearTimeout(timer);
@@ -62,25 +67,34 @@ export default function LandingPage() {
     <>
       <style>{`
         @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=Outfit:wght@300;400;500&display=swap");
-        :root{--bg:#0a0906;--surface:#111009;--border:#1e1c17;--text:#e8e2d4;--muted:#6b6456;--accent:#7ecba1;--accent2:#7ecba1;--radius:4px;}
+        :root{--bg:#0a0906;--surface:#111009;--border:#1e1c17;--text:#e8e2d4;--muted:#6b6456;--accent:#7ecba1;--radius:4px;}
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         html{scroll-behavior:smooth;}
         body{background:var(--bg);color:var(--text);font-family:"Outfit",sans-serif;font-weight:300;overflow-x:hidden;cursor:none;}
         body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.6;}
         .cursor{position:fixed;width:8px;height:8px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform 0.15s;}
         .cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(126,203,161,0.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);}
-        nav{position:fixed;top:0;left:0;right:0;padding:24px 48px;display:flex;align-items:center;justify-content:space-between;z-index:100;background:linear-gradient(to bottom,rgba(10,9,6,0.9),transparent);}
-        .nav-logo{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:600;letter-spacing:0.05em;color:var(--text);text-decoration:none;}
+        .nav-wrap{position:fixed;top:0;left:0;right:0;z-index:100;transition:all 0.5s;}
+        .nav-wrap.scrolled{top:12px;left:16px;right:16px;}
+        .nav-inner{display:flex;align-items:center;justify-content:space-between;transition:all 0.5s;padding:0 48px;}
+        .nav-wrap.scrolled .nav-inner{background:rgba(10,9,6,0.82);backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(126,203,161,0.12);border-radius:14px;padding:0 28px;box-shadow:0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(126,203,161,0.08);}
+        .nav-h{height:80px;transition:height 0.5s;}
+        .nav-wrap.scrolled .nav-h{height:52px;}
+        .nav-logo{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:600;letter-spacing:0.05em;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:8px;}
         .nav-cta{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);text-decoration:none;border:1px solid rgba(126,203,161,0.3);padding:8px 20px;border-radius:2px;transition:background 0.2s,color 0.2s;}
         .nav-cta:hover{background:var(--accent);color:var(--bg);}
-        .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 48px 80px;position:relative;}
+        .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 48px 80px;position:relative;overflow:hidden;}
+        .hero-grid-h,.hero-grid-v{position:absolute;pointer-events:none;opacity:0.18;}
+        .hero-grid-h{left:0;right:0;height:1px;background:var(--border);}
+        .hero-grid-v{top:0;bottom:0;width:1px;background:var(--border);}
         .hero-glow{position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(126,203,161,0.06),transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:pulse-glow 4s ease-in-out infinite;}
-        .hero-eyebrow{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:32px;opacity:0;transform:translateY(12px);animation:fadeUp 0.8s ease 0.2s forwards;}
+        .hero-eyebrow{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:32px;opacity:0;transform:translateY(12px);animation:fadeUp 0.8s ease 0.2s forwards;display:flex;align-items:center;gap:12px;}
+        .hero-eyebrow::before{content:"";display:block;width:32px;height:1px;background:rgba(126,203,161,0.4);}
         .hero-title{font-family:"Cormorant Garamond",serif;font-size:clamp(52px,9vw,120px);font-weight:300;line-height:1;letter-spacing:-0.02em;margin-bottom:28px;opacity:0;transform:translateY(20px);animation:fadeUp 1s ease 0.4s forwards;}
         .hero-title em{font-style:italic;color:var(--accent);}
         .hero-sub{font-size:16px;color:var(--muted);max-width:480px;line-height:1.7;margin-bottom:52px;opacity:0;transform:translateY(16px);animation:fadeUp 0.9s ease 0.6s forwards;}
         .hero-actions{display:flex;gap:16px;align-items:center;opacity:0;transform:translateY(16px);animation:fadeUp 0.9s ease 0.8s forwards;}
-        .btn-primary{font-family:"DM Mono",monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;background:var(--accent);color:var(--bg);border:none;padding:14px 32px;border-radius:2px;cursor:none;text-decoration:none;transition:opacity 0.2s,transform 0.15s;display:inline-block;}
+        .btn-primary{font-family:"DM Mono",monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;background:var(--accent);color:var(--bg);border:none;padding:14px 32px;border-radius:2px;cursor:none;text-decoration:none;transition:opacity 0.2s,transform 0.15s;display:inline-flex;align-items:center;gap:8px;}
         .btn-primary:hover{opacity:0.85;transform:translateY(-1px);}
         .btn-ghost{font-family:"DM Mono",monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s;padding:14px 0;}
         .btn-ghost:hover{color:var(--text);}
@@ -88,15 +102,15 @@ export default function LandingPage() {
         .scroll-line{width:1px;height:48px;background:linear-gradient(to bottom,var(--accent),transparent);animation:scroll-drop 2s ease-in-out infinite;}
         .scroll-label{font-family:"DM Mono",monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);writing-mode:vertical-rl;transform:rotate(180deg);}
         .demo-section{padding:80px 48px 120px;display:flex;justify-content:center;}
-        .demo-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:32px;max-width:680px;width:100%;position:relative;overflow:hidden;}
-        .demo-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--accent),transparent);opacity:0.6;}
+        .demo-card{background:rgba(17,16,9,0.55);backdrop-filter:blur(32px) saturate(180%);border:1px solid rgba(126,203,161,0.14);box-shadow:0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(126,203,161,0.12), inset 0 -1px 0 rgba(0,0,0,0.3);border-radius:12px;padding:32px;max-width:680px;width:100%;position:relative;overflow:hidden;}
+        .demo-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,var(--accent),transparent);opacity:0.5;}
         .demo-header{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);}
-        .demo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);animation:blink 2s ease-in-out infinite;}
+        .demo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:blink 2s ease-in-out infinite;}
         .demo-label{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;}
         .demo-url{font-family:"DM Mono",monospace;font-size:12px;color:var(--accent);margin-left:auto;opacity:0.7;}
         .demo-transcript{font-size:14px;line-height:1.8;color:var(--text);opacity:0.85;min-height:120px;}
         .demo-meta{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:24px;align-items:center;}
-        .demo-stat{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:flex-start;gap:2px;}
+        .demo-stat{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:2px;}
         .demo-stat-val{color:var(--accent);font-size:18px;font-family:"Cormorant Garamond",serif;display:flex;align-items:center;gap:6px;}
         .demo-stat-val i{font-size:20px;}
         .features{padding:80px 48px 120px;max-width:1100px;margin:0 auto;}
@@ -135,7 +149,7 @@ export default function LandingPage() {
         @keyframes pulse-glow{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.1);opacity:0.7;}}
         @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
         @keyframes scroll-drop{0%{transform:scaleY(0);transform-origin:top;opacity:1;}50%{transform:scaleY(1);transform-origin:top;}51%{transform-origin:bottom;}100%{transform:scaleY(0);transform-origin:bottom;opacity:0;}}
-        @media(max-width:768px){nav{padding:20px 24px;}.hero{padding:100px 24px 80px;}.features-grid,.steps{grid-template-columns:1fr;}.features,.how,.demo-section{padding-left:24px;padding-right:24px;}.step-connector{display:none;}footer{flex-direction:column;gap:12px;text-align:center;}}
+        @media(max-width:768px){.nav-inner{padding:0 24px;}.hero{padding:100px 24px 80px;}.features-grid,.steps{grid-template-columns:1fr;}.features,.how,.demo-section{padding-left:24px;padding-right:24px;}.step-connector{display:none;}footer{flex-direction:column;gap:12px;text-align:center;}}
       `}</style>
 
       <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" />
@@ -143,18 +157,31 @@ export default function LandingPage() {
       <div className="cursor" ref={cursorRef}/>
       <div className="cursor-ring" ref={ringRef}/>
 
-      <nav>
-        <a className="nav-logo" href="#">ReelScribe</a>
-        <a className="nav-cta" href="/login">Get started →</a>
-      </nav>
+      <header className={`nav-wrap${scrolled ? " scrolled" : ""}`}>
+        <div className="nav-inner nav-h">
+          <a className="nav-logo" href="#">
+            <i className="bx bx-microphone" style={{ color:"var(--accent)", fontSize:18 }} />
+            ReelScribe
+          </a>
+          <a className="nav-cta" href="/login">Get started →</a>
+        </div>
+      </header>
 
       <section className="hero">
+        {[...Array(6)].map((_,i) => (
+          <div key={`h${i}`} className="hero-grid-h" style={{ top:`${(i+1)*14.28}%` }} />
+        ))}
+        {[...Array(8)].map((_,i) => (
+          <div key={`v${i}`} className="hero-grid-v" style={{ left:`${(i+1)*11.11}%` }} />
+        ))}
         <div className="hero-glow"/>
         <p className="hero-eyebrow">Instagram Reels → Markdown</p>
         <h1 className="hero-title">The reel you watched.<br/><em>The words that stayed.</em></h1>
         <p className="hero-sub">Paste a URL. Get a clean transcript in seconds. No scraping, no login walls — just the text, ready to use.</p>
         <div className="hero-actions">
-          <a href="/login" className="btn-primary">Start transcribing</a>
+          <a href="/login" className="btn-primary">
+            Start transcribing <i className="bx bx-right-arrow-alt" style={{ fontSize:16 }} />
+          </a>
           <a href="#how" className="btn-ghost">See how it works ↓</a>
         </div>
         <div className="scroll-hint">
@@ -192,12 +219,12 @@ export default function LandingPage() {
         <div className="section-label">What you get</div>
         <div className="features-grid">
           {[
-            { icon:"bx-microphone",    title:"High-fidelity transcription", desc:"Powered by Deepgram nova-2. Smart formatting, punctuation, and paragraph breaks — not a wall of text." },
-            { icon:"bxs-file-md",      title:"Clean markdown output",        desc:"Every transcript exports as a .md file with YAML frontmatter — drop it into Obsidian, NotebookLM, or your notes app." },
-            { icon:"bx-image",         title:"Thumbnail + preview",          desc:"Your reel library stays visual. Thumbnails are stored privately alongside each transcript." },
-            { icon:"bx-key",           title:"Sync keys",                    desc:"Generate scoped keys to connect the browser extension to your account. Revoke anytime." },
-            { icon:"bx-alarm",         title:"30 seconds flat",              desc:"Paste the URL. The extension fetches, transcribes, and saves — all while you move on with your day." },
-            { icon:"bx-lock-alt",      title:"Yours only",                   desc:"Row-level security means your reels are only ever visible to you. No shared databases." },
+            { icon:"bx-microphone",  title:"High-fidelity transcription", desc:"Powered by Deepgram nova-2. Smart formatting, punctuation, and paragraph breaks — not a wall of text." },
+            { icon:"bxs-file-md",    title:"Clean markdown output",        desc:"Every transcript exports as a .md file with YAML frontmatter — drop it into Obsidian, NotebookLM, or your notes app." },
+            { icon:"bx-image",       title:"Thumbnail + preview",          desc:"Your reel library stays visual. Thumbnails are stored privately alongside each transcript." },
+            { icon:"bx-key",         title:"Sync keys",                    desc:"Generate scoped keys to connect the browser extension to your account. Revoke anytime." },
+            { icon:"bx-alarm",       title:"30 seconds flat",              desc:"Paste the URL. The extension fetches, transcribes, and saves — all while you move on with your day." },
+            { icon:"bx-lock-alt",    title:"Yours only",                   desc:"Row-level security means your reels are only ever visible to you. No shared databases." },
           ].map(f => (
             <div className="feature" key={f.title}>
               <i className={`bx ${f.icon} feature-icon`} />
@@ -212,8 +239,8 @@ export default function LandingPage() {
         <div className="section-label">How it works</div>
         <div className="steps">
           {[
-            { n:"01", title:"Install the extension", desc:"Add ReelScribe to Chrome. Paste your sync key once — it remembers the rest.",              delay:0   },
-            { n:"02", title:"Paste any Reel URL",    desc:"Copy the Instagram URL. Open the extension. Hit transcribe. That's the entire workflow.", delay:150 },
+            { n:"01", title:"Install the extension", desc:"Add ReelScribe to Chrome. Paste your sync key once — it remembers the rest.",               delay:0   },
+            { n:"02", title:"Paste any Reel URL",    desc:"Copy the Instagram URL. Open the extension. Hit transcribe. That\'s the entire workflow.",  delay:150 },
             { n:"03", title:"Read, export, use",     desc:"Your transcript lands in the dashboard instantly. Download as .md or pipe it wherever you work.", delay:300 },
           ].map((s,i) => (
             <div className="step" key={s.n} data-delay={String(s.delay)}>
@@ -227,7 +254,7 @@ export default function LandingPage() {
       </section>
 
       <section className="quote-section">
-        <p className="quote-text">"The best ideas live inside reels you'll never find again."</p>
+        <p className="quote-text">"The best ideas live inside reels you\'ll never find again."</p>
         <p className="quote-attr">ReelScribe fixes that</p>
       </section>
 
