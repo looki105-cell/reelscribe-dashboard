@@ -114,7 +114,7 @@ export default function LandingPage() {
         .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:48px;}
         .step{position:relative;opacity:0;transform:translateY(24px);transition:opacity 0.6s ease,transform 0.6s ease;}
         .step.visible{opacity:1;transform:translateY(0);}
-        .step-num{font-family:"Cormorant Garamond",serif;font-size:72px;font-weight:300;color:var(--border);line-height:1;margin-bottom:16px;}
+        .step-num{font-family:"Cormorant Garamond",serif;font-size:72px;font-weight:300;color:var(--accent);opacity:0.25;line-height:1;margin-bottom:16px;}
         .step-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px;}
         .step-desc{font-size:13px;color:var(--muted);line-height:1.7;}
         .step-connector{position:absolute;top:36px;right:-24px;width:48px;height:1px;background:linear-gradient(to right,var(--border),transparent);}
