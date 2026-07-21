@@ -56,23 +56,35 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Stat cards — skeleton while loading */}
       <div style={{ display:"flex", gap:"12px", marginBottom:"28px" }}>
-        {[
-          { label:"Total reels",       value: reels.length },
-          { label:"Words transcribed", value: reels.reduce((a,r) => a+(r.word_count||0), 0).toLocaleString() },
-        ].map(s => (
-          <div key={s.label} style={{ background:"var(--surface)", border:"1px solid var(--border)",
-            borderRadius:"var(--radius)", padding:"14px 18px", flex:1 }}>
-            <p style={{ fontSize:"22px", fontWeight:700 }}>{s.value}</p>
-            <p style={{ fontSize:"11px", color:"var(--muted)", marginTop:"2px" }}>{s.label}</p>
-          </div>
-        ))}
+        {loading ? (
+          <>
+            <div style={skeletonStatStyle} />
+            <div style={skeletonStatStyle} />
+          </>
+        ) : (
+          [
+            { label:"Total reels",       value: reels.length },
+            { label:"Words transcribed", value: reels.reduce((a,r) => a+(r.word_count||0), 0).toLocaleString() },
+          ].map(s => (
+            <div key={s.label} style={{ background:"var(--surface)", border:"1px solid var(--border)",
+              borderRadius:"var(--radius)", padding:"14px 18px", flex:1 }}>
+              <p style={{ fontSize:"22px", fontWeight:700 }}>{s.value}</p>
+              <p style={{ fontSize:"11px", color:"var(--muted)", marginTop:"2px" }}>{s.label}</p>
+            </div>
+          ))
+        )}
       </div>
 
+      {/* Pinterest masonry grid */}
       {loading ? (
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:"16px" }}>
-          {[...Array(6)].map((_,i) => (
-            <div key={i} style={{ ...cardBase, background:"var(--surface)", animation:"pulse 1.5s infinite" }} />
+        <div style={masonryGrid}>
+          {[...Array(12)].map((_,i) => (
+            <div key={i} style={{
+              ...skeletonCardStyle,
+              aspectRatio: i % 3 === 0 ? "9/16" : i % 3 === 1 ? "9/14" : "9/18",
+            }} />
           ))}
         </div>
       ) : reels.length === 0 ? (
@@ -81,16 +93,94 @@ export default function Dashboard() {
           <p>No reels yet. Paste a URL in the extension to get started.</p>
         </div>
       ) : (
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(200px, 1fr))", gap:"16px" }}>
+        <div style={masonryGrid}>
           {reels.map(reel => <ReelCard key={reel.id} reel={reel} />)}
         </div>
       )}
 
       <style>{`
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes shimmer {
+          0%   { background-position: -400px 0; }
+          100% { background-position:  400px 0; }
+        }
+        .skeleton {
+          background: linear-gradient(90deg,
+            var(--surface) 25%,
+            #2a2a2a 50%,
+            var(--surface) 75%
+          );
+          background-size: 800px 100%;
+          animation: shimmer 1.4s infinite linear;
+        }
         .reel-card:hover .overlay { opacity:1!important; }
       `}</style>
     </main>
+  );
+}
+
+function ReelCard({ reel }: { reel: SavedReel }) {
+  const [thumbSrc, setThumbSrc] = useState<string | null>(null);
+  const [imgError, setImgError] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function resolveThumb() {
+      if (reel.thumbnail_storage_path) {
+        const { data, error } = await supabase.storage
+          .from("reel-assets")
+          .createSignedUrl(reel.thumbnail_storage_path, 3600);
+        if (error) console.warn("[thumb] signed URL error:", error.message);
+        if (data?.signedUrl) { setThumbSrc(data.signedUrl); return; }
+      }
+      if (reel.thumbnail_url || reel.frame_url) {
+        setThumbSrc(reel.thumbnail_url || reel.frame_url);
+        return;
+      }
+    }
+    resolveThumb();
+  }, [reel.thumbnail_storage_path, reel.thumbnail_url, reel.frame_url]);
+
+  return (
+    <div className="reel-card"
+      style={{ position:"relative", overflow:"hidden", cursor:"pointer",
+        borderRadius:"var(--radius)", border:"1px solid var(--border)",
+        breakInside:"avoid", marginBottom:"12px",
+      }}
+      onClick={() => window.open(reel.url, "_blank")}>
+      <div style={{ width:"100%", aspectRatio:"9/16", background:"var(--surface)", position:"relative" }}>
+        {thumbSrc && !imgError ? (
+          <img src={thumbSrc} alt={reel.post_id} onError={() => setImgError(true)}
+            style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
+        ) : (
+          <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center",
+            justifyContent:"center", fontSize:"24px", color:"var(--muted)" }}>🎙</div>
+        )}
+      </div>
+      <div className="overlay" style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.78)",
+        opacity:0, transition:"opacity 0.2s", padding:"10px", display:"flex",
+        flexDirection:"column", justifyContent:"flex-end" }}>
+        <p style={{ fontSize:"10px", color:"var(--accent)", marginBottom:"3px" }}>
+          {reel.word_count ? `${reel.word_count} words` : "No transcript"}
+        </p>
+        <p style={{ fontSize:"9px", color:"var(--muted)", marginBottom:"6px" }}>
+          {new Date(reel.created_at).toLocaleDateString()}
+        </p>
+        {reel.transcript && (
+          <p style={{ fontSize:"10px", color:"var(--text)", marginBottom:"8px",
+            overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3,
+            WebkitBoxOrient:"vertical" }}>
+            {reel.transcript}
+          </p>
+        )}
+        <button
+          onClick={e => { e.stopPropagation(); downloadMd(reel); }}
+          style={{ background:"var(--accent)", color:"#0e0e0e", border:"none",
+            borderRadius:"6px", padding:"5px 0", fontSize:"11px", fontWeight:600,
+            cursor:"pointer", width:"100%" }}>
+          ↓ .md
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -114,73 +204,27 @@ function downloadMd(reel: SavedReel) {
   URL.revokeObjectURL(url);
 }
 
-function ReelCard({ reel }: { reel: SavedReel }) {
-  const [thumbSrc, setThumbSrc] = useState<string | null>(null);
-  const [imgError, setImgError] = useState(false);
-  const supabase = createClient();
-
-  useEffect(() => {
-    async function resolveThumb() {
-      if (reel.thumbnail_storage_path) {
-        const { data, error } = await supabase.storage
-          .from("reel-assets")
-          .createSignedUrl(reel.thumbnail_storage_path, 3600);
-        if (error) console.warn("[thumb] signed URL error:", error.message);
-        if (data?.signedUrl) { setThumbSrc(data.signedUrl); return; }
-      }
-      if (reel.thumbnail_url || reel.frame_url) {
-        setThumbSrc(reel.thumbnail_url || reel.frame_url);
-        return;
-      }
-      console.warn("[thumb] no source for", reel.post_id, "| path:", reel.thumbnail_storage_path);
-    }
-    resolveThumb();
-  }, [reel.thumbnail_storage_path, reel.thumbnail_url, reel.frame_url]);
-
-  return (
-    <div className="reel-card"
-      style={{ ...cardBase, position:"relative", overflow:"hidden", cursor:"pointer" }}
-      onClick={() => window.open(reel.url, "_blank")}>
-      <div style={{ width:"100%", aspectRatio:"9/16", background:"var(--surface)", position:"relative" }}>
-        {thumbSrc && !imgError ? (
-          <img src={thumbSrc} alt={reel.post_id} onError={() => setImgError(true)}
-            style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-        ) : (
-          <div style={{ width:"100%", height:"100%", display:"flex", alignItems:"center",
-            justifyContent:"center", fontSize:"32px", color:"var(--muted)" }}>🎙</div>
-        )}
-      </div>
-      <div className="overlay" style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.75)",
-        opacity:0, transition:"opacity 0.2s", padding:"12px", display:"flex",
-        flexDirection:"column", justifyContent:"flex-end" }}>
-        <p style={{ fontSize:"11px", color:"var(--accent)", marginBottom:"4px" }}>
-          {reel.word_count ? `${reel.word_count} words` : "No transcript"}
-        </p>
-        <p style={{ fontSize:"10px", color:"var(--muted)", marginBottom:"8px" }}>
-          {new Date(reel.created_at).toLocaleDateString()}
-        </p>
-        {reel.transcript && (
-          <p style={{ fontSize:"11px", color:"var(--text)", marginBottom:"10px",
-            overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3,
-            WebkitBoxOrient:"vertical" }}>
-            {reel.transcript}
-          </p>
-        )}
-        <button
-          onClick={e => { e.stopPropagation(); downloadMd(reel); }}
-          style={{ background:"var(--accent)", color:"#0e0e0e", border:"none",
-            borderRadius:"6px", padding:"6px 0", fontSize:"12px", fontWeight:600,
-            cursor:"pointer", width:"100%" }}>
-          ↓ Download .md
-        </button>
-      </div>
-    </div>
-  );
-}
-
-const cardBase: React.CSSProperties = {
-  borderRadius:"var(--radius)", border:"1px solid var(--border)", minHeight:"280px",
+// Pinterest-style masonry: small columns (~160px min), scales with zoom
+const masonryGrid: React.CSSProperties = {
+  columns: "160px",
+  columnGap: "10px",
 };
+
+const skeletonStatStyle: React.CSSProperties = {
+  flex: 1,
+  height: 62,
+  borderRadius: "var(--radius)",
+  border: "1px solid var(--border)",
+} as React.CSSProperties & { className?: string };
+
+const skeletonCardStyle: React.CSSProperties = {
+  width: "100%",
+  borderRadius: "var(--radius)",
+  border: "1px solid var(--border)",
+  marginBottom: "10px",
+  breakInside: "avoid" as const,
+};
+
 const btnSecondary: React.CSSProperties = {
   background:"var(--surface)", color:"var(--text)", border:"1px solid var(--border)",
   borderRadius:"var(--radius)", padding:"7px 14px", fontSize:"12px", cursor:"pointer",
