@@ -5,6 +5,7 @@ export type SavedReel = {
   frame_url: string | null;
   frame_status: "pending" | "ok" | "stale";
   thumbnail_url: string | null;
+  thumbnail_storage_path: string | null;
   transcript: string | null;
   word_count: number | null;
   caption: string | null;
