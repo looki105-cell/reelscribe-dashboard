@@ -193,10 +193,10 @@ export default function LandingPage() {
         <div className="features-grid">
           {[
             { icon:"bx-microphone",    title:"High-fidelity transcription", desc:"Powered by Deepgram nova-2. Smart formatting, punctuation, and paragraph breaks — not a wall of text." },
-            { icon:"bx-file-md",       title:"Clean markdown output",        desc:"Every transcript exports as a .md file with YAML frontmatter — drop it into Obsidian, NotebookLM, or your notes app." },
+            { icon:"bxs-file-md",      title:"Clean markdown output",        desc:"Every transcript exports as a .md file with YAML frontmatter — drop it into Obsidian, NotebookLM, or your notes app." },
             { icon:"bx-image",         title:"Thumbnail + preview",          desc:"Your reel library stays visual. Thumbnails are stored privately alongside each transcript." },
             { icon:"bx-key",           title:"Sync keys",                    desc:"Generate scoped keys to connect the browser extension to your account. Revoke anytime." },
-            { icon:"bx-zap",           title:"30 seconds flat",              desc:"Paste the URL. The extension fetches, transcribes, and saves — all while you move on with your day." },
+            { icon:"bx-alarm",         title:"30 seconds flat",              desc:"Paste the URL. The extension fetches, transcribes, and saves — all while you move on with your day." },
             { icon:"bx-lock-alt",      title:"Yours only",                   desc:"Row-level security means your reels are only ever visible to you. No shared databases." },
           ].map(f => (
             <div className="feature" key={f.title}>
