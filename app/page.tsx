@@ -95,9 +95,10 @@ export default function LandingPage() {
         .demo-label{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;}
         .demo-url{font-family:"DM Mono",monospace;font-size:12px;color:var(--accent);margin-left:auto;opacity:0.7;}
         .demo-transcript{font-size:14px;line-height:1.8;color:var(--text);opacity:0.85;min-height:120px;}
-        .demo-meta{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:24px;}
-        .demo-stat{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);}
-        .demo-stat span{color:var(--accent);display:block;font-size:18px;font-family:"Cormorant Garamond",serif;margin-bottom:2px;}
+        .demo-meta{margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:24px;align-items:center;}
+        .demo-stat{font-family:"DM Mono",monospace;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:flex-start;gap:2px;}
+        .demo-stat-val{color:var(--accent);font-size:18px;font-family:"Cormorant Garamond",serif;display:flex;align-items:center;gap:6px;}
+        .demo-stat-val i{font-size:20px;}
         .features{padding:80px 48px 120px;max-width:1100px;margin:0 auto;}
         .section-label{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--accent);margin-bottom:64px;display:flex;align-items:center;gap:16px;}
         .section-label::after{content:"";flex:1;height:1px;background:var(--border);}
@@ -106,7 +107,7 @@ export default function LandingPage() {
         .feature::after{content:"";position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(.16,1,.3,1);}
         .feature:hover{background:var(--surface);}
         .feature:hover::after{transform:scaleX(1);}
-        .feature-icon{font-size:28px;margin-bottom:20px;display:block;}
+        .feature-icon{font-size:26px;margin-bottom:20px;display:block;color:var(--accent);opacity:0.8;}
         .feature-title{font-family:"Cormorant Garamond",serif;font-size:22px;font-weight:400;color:var(--text);margin-bottom:12px;line-height:1.2;}
         .feature-desc{font-size:13px;color:var(--muted);line-height:1.7;}
         .how{padding:80px 48px 120px;max-width:1100px;margin:0 auto;}
@@ -127,7 +128,7 @@ export default function LandingPage() {
         .cta-title{font-family:"Cormorant Garamond",serif;font-size:clamp(36px,6vw,72px);font-weight:300;color:var(--text);margin-bottom:16px;line-height:1.1;}
         .cta-sub{font-size:14px;color:var(--muted);margin-bottom:48px;}
         footer{padding:32px 48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-        .footer-logo{font-family:"Cormorant Garamond",serif;font-size:16px;color:var(--muted);}
+        .footer-logo{font-family:"Cormorant Garamond",serif;font-size:16px;color:var(--muted);display:flex;align-items:center;gap:8px;}
         .footer-note{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:0.1em;color:var(--muted);opacity:0.5;text-transform:uppercase;}
         @keyframes fadeUp{to{opacity:1;transform:translateY(0);}}
         @keyframes fadeIn{to{opacity:1;}}
@@ -136,6 +137,8 @@ export default function LandingPage() {
         @keyframes scroll-drop{0%{transform:scaleY(0);transform-origin:top;opacity:1;}50%{transform:scaleY(1);transform-origin:top;}51%{transform-origin:bottom;}100%{transform:scaleY(0);transform-origin:bottom;opacity:0;}}
         @media(max-width:768px){nav{padding:20px 24px;}.hero{padding:100px 24px 80px;}.features-grid,.steps{grid-template-columns:1fr;}.features,.how,.demo-section{padding-left:24px;padding-right:24px;}.step-connector{display:none;}footer{flex-direction:column;gap:12px;text-align:center;}}
       `}</style>
+
+      <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" />
 
       <div className="cursor" ref={cursorRef}/>
       <div className="cursor-ring" ref={ringRef}/>
@@ -169,9 +172,18 @@ export default function LandingPage() {
           </div>
           <p className="demo-transcript" ref={demoRef}/>
           <div className="demo-meta">
-            <div className="demo-stat"><span ref={wcRef}>0</span>words captured</div>
-            <div className="demo-stat"><span>↓</span>export as .md</div>
-            <div className="demo-stat"><span>🎙</span>nova-2 model</div>
+            <div className="demo-stat">
+              <span className="demo-stat-val"><i className="bx bx-text"/><span ref={wcRef}>0</span></span>
+              words captured
+            </div>
+            <div className="demo-stat">
+              <span className="demo-stat-val"><i className="bx bx-download"/></span>
+              export as .md
+            </div>
+            <div className="demo-stat">
+              <span className="demo-stat-val"><i className="bx bx-microphone"/></span>
+              nova-2 model
+            </div>
           </div>
         </div>
       </section>
@@ -180,15 +192,15 @@ export default function LandingPage() {
         <div className="section-label">What you get</div>
         <div className="features-grid">
           {[
-            {icon:"🎙",title:"High-fidelity transcription",desc:"Powered by Deepgram nova-2. Smart formatting, punctuation, and paragraph breaks — not a wall of text."},
-            {icon:"📎",title:"Clean markdown output",desc:"Every transcript exports as a .md file with YAML frontmatter — drop it into Obsidian, NotebookLM, or your notes app."},
-            {icon:"🖼",title:"Thumbnail + preview",desc:"Your reel library stays visual. Thumbnails are stored privately alongside each transcript."},
-            {icon:"🔑",title:"Sync keys",desc:"Generate scoped keys to connect the browser extension to your account. Revoke anytime."},
-            {icon:"⚡",title:"30 seconds flat",desc:"Paste the URL. The extension fetches, transcribes, and saves — all while you move on with your day."},
-            {icon:"🔒",title:"Yours only",desc:"Row-level security means your reels are only ever visible to you. No shared databases."},
+            { icon:"bx-microphone",    title:"High-fidelity transcription", desc:"Powered by Deepgram nova-2. Smart formatting, punctuation, and paragraph breaks — not a wall of text." },
+            { icon:"bx-file-md",       title:"Clean markdown output",        desc:"Every transcript exports as a .md file with YAML frontmatter — drop it into Obsidian, NotebookLM, or your notes app." },
+            { icon:"bx-image",         title:"Thumbnail + preview",          desc:"Your reel library stays visual. Thumbnails are stored privately alongside each transcript." },
+            { icon:"bx-key",           title:"Sync keys",                    desc:"Generate scoped keys to connect the browser extension to your account. Revoke anytime." },
+            { icon:"bx-zap",           title:"30 seconds flat",              desc:"Paste the URL. The extension fetches, transcribes, and saves — all while you move on with your day." },
+            { icon:"bx-lock-alt",      title:"Yours only",                   desc:"Row-level security means your reels are only ever visible to you. No shared databases." },
           ].map(f => (
             <div className="feature" key={f.title}>
-              <span className="feature-icon">{f.icon}</span>
+              <i className={`bx ${f.icon} feature-icon`} />
               <h3 className="feature-title">{f.title}</h3>
               <p className="feature-desc">{f.desc}</p>
             </div>
@@ -200,9 +212,9 @@ export default function LandingPage() {
         <div className="section-label">How it works</div>
         <div className="steps">
           {[
-            {n:"01",title:"Install the extension",desc:"Add ReelScribe to Chrome. Paste your sync key once — it remembers the rest.",delay:0},
-            {n:"02",title:"Paste any Reel URL",desc:"Copy the Instagram URL. Open the extension. Hit transcribe. That's the entire workflow.",delay:150},
-            {n:"03",title:"Read, export, use",desc:"Your transcript lands in the dashboard instantly. Download as .md or pipe it wherever you work.",delay:300},
+            { n:"01", title:"Install the extension", desc:"Add ReelScribe to Chrome. Paste your sync key once — it remembers the rest.",              delay:0   },
+            { n:"02", title:"Paste any Reel URL",    desc:"Copy the Instagram URL. Open the extension. Hit transcribe. That's the entire workflow.", delay:150 },
+            { n:"03", title:"Read, export, use",     desc:"Your transcript lands in the dashboard instantly. Download as .md or pipe it wherever you work.", delay:300 },
           ].map((s,i) => (
             <div className="step" key={s.n} data-delay={String(s.delay)}>
               <div className="step-num">{s.n}</div>
@@ -226,7 +238,10 @@ export default function LandingPage() {
       </section>
 
       <footer>
-        <span className="footer-logo">ReelScribe</span>
+        <span className="footer-logo">
+          <i className="bx bx-microphone" style={{ color:"var(--accent)", fontSize:16 }} />
+          ReelScribe
+        </span>
         <span className="footer-note">Beta — Built for curious minds</span>
       </footer>
     </>
