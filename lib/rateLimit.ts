@@ -18,7 +18,7 @@ export function rateLimit(key: string, limit: number, windowMs: number): boolean
 }
 
 export function rateLimitResponse() {
-  return new Response(JSON.stringify({ error: "Too many requests" }), {
+  return new Response(JSON.stringify({ error: "You've hit the rate limit — please wait a moment and try again." }), {
     status: 429,
     headers: { "Content-Type": "application/json", "Retry-After": "60" },
   });
